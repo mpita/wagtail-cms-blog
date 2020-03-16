@@ -14,7 +14,7 @@ from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 
 
-class BlogIndexPage(Page):
+class BlogPage(Page):
     intro = RichTextField(blank=True)
 
     content_panels = Page.content_panels + [
@@ -24,38 +24,38 @@ class BlogIndexPage(Page):
     def get_context(self, request):
         # Update context to include only published posts, ordered by reverse-chron
         context = super().get_context(request)
-        blogpages = self.get_children().live().order_by('-first_published_at')
-        context['blogpages'] = blogpages
+        articles = self.get_children().live().order_by('-first_published_at')
+        context['articles'] = articles
         return context
 
 
-class BlogTagIndexPage(Page):
+class BlogTagPage(Page):
 
     def get_context(self, request):
 
         # Filter by tag
         tag = request.GET.get('tag')
-        blogpages = BlogPage.objects.filter(tags__name=tag)
+        articles = Article.objects.filter(tags__name=tag)
 
         # Update template context
         context = super().get_context(request)
-        context['blogpages'] = blogpages
+        context['articles'] = articles
         return context
 
 
-class BlogPageTag(TaggedItemBase):
+class ArticleTag(TaggedItemBase):
     content_object = ParentalKey(
-        'BlogPage',
+        'Article',
         related_name='tagged_items',
         on_delete=models.CASCADE
     )
 
 
-class BlogPage(Page):
+class Article(Page):
     date = models.DateField("Post date")
     intro = models.CharField(max_length=250)
     body = RichTextField(blank=True)
-    tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
+    tags = ClusterTaggableManager(through=ArticleTag, blank=True)
     categories = ParentalManyToManyField('blog.BlogCategory', blank=True)
 
     def main_image(self):
@@ -82,8 +82,8 @@ class BlogPage(Page):
     ]
 
 
-class BlogPageGalleryImage(Orderable):
-    page = ParentalKey(BlogPage, on_delete=models.CASCADE, related_name='gallery_images')
+class ArticleGalleryImage(Orderable):
+    page = ParentalKey(Article, on_delete=models.CASCADE, related_name='gallery_images')
     image = models.ForeignKey(
         'wagtailimages.Image', on_delete=models.CASCADE, related_name='+'
     )
